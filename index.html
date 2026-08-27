@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Habit Tracker</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Google Fonts for a modern look -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>My Habits</h1>
+            <p id="current-date">Today</p>
+        </header>
+
+        <section class="add-habit">
+            <form id="add-habit-form">
+                <input type="text" id="habit-input" placeholder="Add a new habit..." required autocomplet="off">
+                <button type="submit">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                </button>
+            </form>
+        </section>
+
+        <section class="habits-list">
+            <h2>Today's Goals</h2>
+            <ul id="habit-list">
+                <!-- Habits will be injected here by JS -->
+                <li class="empty-state">No habits yet. Add one above!</li>
+            </ul>
+        </section>
+
+        <section class="weekly-progress">
+            <h2>Weekly Progress</h2>
+            <div id="weekly-chart" class="chart-container">
+                <!-- Weekly bars will be injected here -->
+            </div>
+        </section>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
