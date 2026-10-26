@@ -1498,3 +1498,504 @@ body.theme-light .date-input::-webkit-calendar-picker-indicator {
 .app-footer strong {
     color: #34d399;
 }
+
+/* ==========================================================================
+   歷史數據分析與報表視圖 (Analytics View Styles)
+   ========================================================================== */
+.analytics-container {
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.75rem;
+}
+
+.analytics-hero-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid var(--border-glass);
+}
+
+.analytics-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    flex-wrap: wrap;
+}
+
+.file-upload-label {
+    cursor: pointer;
+    user-select: none;
+    margin: 0;
+}
+
+/* 5 大核心 KPI 卡片網格 */
+.kpi-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.kpi-card {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.015));
+    border: 1px solid var(--border-glass);
+    border-radius: var(--radius-lg);
+    padding: 1.25rem 1.35rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    transition: transform var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
+    position: relative;
+    overflow: hidden;
+}
+
+.kpi-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: var(--primary-gradient);
+    opacity: 0.6;
+}
+
+.kpi-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(16, 185, 129, 0.4);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+}
+
+.kpi-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.kpi-icon {
+    font-size: 1.25rem;
+}
+
+.kpi-title {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+.kpi-value {
+    font-size: 1.85rem;
+    font-weight: 800;
+    font-family: var(--font-mono);
+    color: #f8fafc;
+    letter-spacing: -0.02em;
+    display: flex;
+    align-items: baseline;
+    gap: 0.35rem;
+}
+
+body.theme-light .kpi-value {
+    color: #0f172a;
+}
+
+.kpi-value strong {
+    background: linear-gradient(135deg, #34d399, #38bdf8);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.kpi-unit {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+.kpi-subtitle {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+}
+
+/* ==========================================================================
+   GitHub 風格 打卡熱力圖 (Activity Heatmap)
+   ========================================================================== */
+.heatmap-section {
+    padding: 1.5rem 1.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.section-sub-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.sub-header-left {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.section-icon {
+    font-size: 1.5rem;
+}
+
+.section-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+.section-desc {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.heatmap-legend {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.76rem;
+    color: var(--text-muted);
+}
+
+.legend-box {
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+    display: inline-block;
+}
+
+.level-0 {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+}
+.level-1 {
+    background: #064e3b;
+    border: 1px solid #065f46;
+}
+.level-2 {
+    background: #047857;
+    border: 1px solid #059669;
+}
+.level-3 {
+    background: #10b981;
+    border: 1px solid #34d399;
+    box-shadow: 0 0 6px rgba(16, 185, 129, 0.3);
+}
+.level-4 {
+    background: #34d399;
+    border: 1px solid #6ee7b7;
+    box-shadow: 0 0 10px rgba(52, 211, 153, 0.5);
+}
+
+.heatmap-container {
+    display: grid;
+    grid-auto-flow: column;
+    grid-template-rows: repeat(7, 18px);
+    grid-auto-columns: 18px;
+    gap: 4px;
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
+}
+
+.heat-cell {
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: transform 0.15s ease, filter 0.15s ease;
+    position: relative;
+}
+
+.heat-cell:hover {
+    transform: scale(1.35);
+    z-index: 10;
+    filter: brightness(1.2);
+}
+
+.heat-cell.is-today {
+    outline: 2px solid #38bdf8;
+    outline-offset: 1px;
+}
+
+/* ==========================================================================
+   雙圖表區塊 (Charts Double Grid)
+   ========================================================================== */
+.charts-double-grid {
+    display: grid;
+    grid-template-columns: 1.3fr 1fr;
+    gap: 1.25rem;
+}
+
+@media (max-width: 960px) {
+    .charts-double-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.chart-box {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.chart-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+}
+
+.chart-title {
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.chart-desc {
+    font-size: 0.76rem;
+    color: var(--text-muted);
+}
+
+.chart-render-area {
+    min-height: 220px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+}
+
+/* 走勢圖 SVG 樣式 */
+.trend-svg {
+    width: 100%;
+    height: 220px;
+    overflow: visible;
+}
+
+.axis-line {
+    stroke: rgba(255, 255, 255, 0.1);
+    stroke-width: 1;
+}
+
+.chart-bar {
+    fill: url(#bar-grad);
+    rx: 4;
+    transition: opacity 0.2s ease;
+    cursor: pointer;
+}
+
+.chart-bar:hover {
+    opacity: 0.8;
+}
+
+.trend-line {
+    fill: none;
+    stroke: #fbbf24;
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    filter: drop-shadow(0 2px 5px rgba(251, 191, 36, 0.4));
+}
+
+.trend-dot {
+    fill: #fbbf24;
+    stroke: #0a0e17;
+    stroke-width: 2;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.trend-dot:hover {
+    transform: scale(1.4);
+}
+
+.axis-text {
+    fill: var(--text-dim);
+    font-size: 11px;
+    font-family: var(--font-mono);
+    text-anchor: middle;
+}
+
+/* 六大維度長條分析 */
+.dimension-breakdown-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    padding-top: 0.35rem;
+}
+
+.dim-progress-row {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.dim-progress-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.82rem;
+}
+
+.dim-progress-title {
+    font-weight: 600;
+    color: var(--text-main);
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+}
+
+.dim-progress-stat {
+    font-family: var(--font-mono);
+    font-weight: 700;
+    color: #34d399;
+}
+
+.dim-progress-bar-wrap {
+    height: 8px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: var(--radius-pill);
+    overflow: hidden;
+}
+
+.dim-progress-bar-fill {
+    height: 100%;
+    background: var(--primary-gradient);
+    border-radius: var(--radius-pill);
+    transition: width 0.5s ease;
+}
+
+/* ==========================================================================
+   歷史日誌資料表格 (History Table)
+   ========================================================================== */
+.history-table-section {
+    padding: 1.5rem 1.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.table-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1.25rem;
+    flex-wrap: wrap;
+}
+
+.table-header-left {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.table-search-box {
+    max-width: 320px;
+    width: 100%;
+}
+
+.history-table-wrapper {
+    overflow-x: auto;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-glass);
+}
+
+.history-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.86rem;
+    text-align: left;
+}
+
+.history-table th {
+    background: rgba(255, 255, 255, 0.04);
+    padding: 0.85rem 1rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border-glass);
+    white-space: nowrap;
+}
+
+.history-table td {
+    padding: 0.85rem 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    color: var(--text-main);
+    vertical-align: top;
+}
+
+.history-table tbody tr:hover {
+    background: rgba(255, 255, 255, 0.025);
+}
+
+.table-date-badge {
+    font-family: var(--font-mono);
+    font-weight: 700;
+    color: #38bdf8;
+    white-space: nowrap;
+}
+
+.table-rate-pill {
+    display: inline-block;
+    padding: 0.2rem 0.55rem;
+    border-radius: var(--radius-pill);
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: 0.76rem;
+    background: rgba(16, 185, 129, 0.15);
+    color: #34d399;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    white-space: nowrap;
+}
+
+.table-score-pill {
+    color: #fbbf24;
+    font-family: var(--font-mono);
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.table-summary-cell {
+    max-width: 240px;
+    line-height: 1.45;
+    color: var(--text-muted);
+}
+
+.table-action-btns {
+    display: flex;
+    gap: 0.35rem;
+    white-space: nowrap;
+}
+
+/* ==========================================================================
+   列印與匯出樣式 (@media print)
+   ========================================================================== */
+@media print {
+    body {
+        background: #fff !important;
+        color: #000 !important;
+    }
+    .navbar, .view-switch-container, .analytics-actions, .app-footer, .ambient-glow, .table-search-box {
+        display: none !important;
+    }
+    .analytics-container {
+        padding: 0 !important;
+        border: none !important;
+        box-shadow: none !important;
+    }
+    .glass-panel {
+        background: #fff !important;
+        border: 1px solid #ccc !important;
+        box-shadow: none !important;
+    }
+}

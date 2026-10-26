@@ -68,6 +68,9 @@
                 <button type="button" class="tab-btn" data-view="weekly">
                     <span>🔄</span> 七、每週回顧專區
                 </button>
+                <button type="button" class="tab-btn" data-view="analytics">
+                    <span>📊</span> 歷史報表與數據分析
+                </button>
             </div>
             <div class="quick-status-chip" id="sync-status-indicator">
                 <span class="status-dot"></span>
@@ -672,6 +675,179 @@
                         </div>
                     </div>
                 </form>
+            </div>
+        </section>
+
+        <!-- ======================= 歷史報表與數據分析視圖 (ANALYTICS VIEW) ======================= -->
+        <section id="analytics-view" class="view-content">
+            <div class="analytics-container glass-panel">
+                <!-- 報表頂部工具列 -->
+                <div class="analytics-hero-header">
+                    <div class="hero-left">
+                        <span class="hero-badge">📊 數據分析與歷史報表</span>
+                        <h2 class="hero-title">個人平衡計分卡 ｜ 歷史全景分析</h2>
+                        <p class="hero-desc">追蹤長期自律趨勢、AI 專業時數累積與六大維度平衡指標。</p>
+                    </div>
+                    <div class="analytics-actions">
+                        <button type="button" class="btn-secondary" id="export-csv-btn" title="下載 Excel 格式的歷史報表">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                            <span>匯出 Excel (CSV)</span>
+                        </button>
+                        <button type="button" class="btn-secondary" id="export-json-btn" title="備份完整 JSON 資料檔">
+                            <span>💾</span> 備份 JSON
+                        </button>
+                        <label class="btn-secondary file-upload-label" title="從 JSON 檔案恢復數據">
+                            <span>📥</span> 匯入備份
+                            <input type="file" id="import-json-input" accept=".json" style="display: none;">
+                        </label>
+                        <button type="button" class="btn-primary" id="print-report-btn" title="列印或另存 PDF 報表">
+                            <span>🖨️</span> 列印報表
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 核心 KPI 指標卡片 (5 大亮點指標) -->
+                <div class="kpi-cards-grid">
+                    <div class="kpi-card">
+                        <div class="kpi-header">
+                            <span class="kpi-icon">📅</span>
+                            <span class="kpi-title">累計追蹤天數</span>
+                        </div>
+                        <div class="kpi-value"><strong id="kpi-total-days">0</strong> <span class="kpi-unit">天</span></div>
+                        <div class="kpi-subtitle">跨日自律打卡記錄</div>
+                    </div>
+
+                    <div class="kpi-card">
+                        <div class="kpi-header">
+                            <span class="kpi-icon">🔥</span>
+                            <span class="kpi-title">當前連續打卡</span>
+                        </div>
+                        <div class="kpi-value"><strong id="kpi-streak">0</strong> <span class="kpi-unit">天連續</span></div>
+                        <div class="kpi-subtitle" id="kpi-streak-desc">維持不中斷的習慣鏈條</div>
+                    </div>
+
+                    <div class="kpi-card">
+                        <div class="kpi-header">
+                            <span class="kpi-icon">🤖</span>
+                            <span class="kpi-title">AI 學習總時數</span>
+                        </div>
+                        <div class="kpi-value"><strong id="kpi-ai-hours">0.0</strong> <span class="kpi-unit">小時</span></div>
+                        <div class="kpi-subtitle" id="kpi-ai-mins">共 0 分鐘深度實作</div>
+                    </div>
+
+                    <div class="kpi-card">
+                        <div class="kpi-header">
+                            <span class="kpi-icon">⭐</span>
+                            <span class="kpi-title">歷史平均滿意度</span>
+                        </div>
+                        <div class="kpi-value"><strong id="kpi-avg-score">--</strong> <span class="kpi-unit">/ 10</span></div>
+                        <div class="kpi-subtitle">整體生活滿意評分</div>
+                    </div>
+
+                    <div class="kpi-card">
+                        <div class="kpi-header">
+                            <span class="kpi-icon">✅</span>
+                            <span class="kpi-title">總累計完成項目</span>
+                        </div>
+                        <div class="kpi-value"><strong id="kpi-total-items">0</strong> <span class="kpi-unit">次達標</span></div>
+                        <div class="kpi-subtitle">六大維度習慣打勾累計</div>
+                    </div>
+                </div>
+
+                <!-- GitHub 風格 打卡熱力圖 (Activity Heatmap) -->
+                <div class="heatmap-section glass-panel">
+                    <div class="section-sub-header">
+                        <div class="sub-header-left">
+                            <span class="section-icon">🟩</span>
+                            <div>
+                                <h3 class="section-title">自律打卡熱力圖 (Habit Heatmap)</h3>
+                                <p class="section-desc">近 90 天習慣達成熱度，顏色越深代表當日完成項目越多（點擊任意格子可直接跳轉至該日查看或編輯）</p>
+                            </div>
+                        </div>
+                        <div class="heatmap-legend">
+                            <span class="legend-text">少</span>
+                            <span class="legend-box level-0" title="未打卡"></span>
+                            <span class="legend-box level-1" title="達成率 1% - 30%"></span>
+                            <span class="legend-box level-2" title="達成率 31% - 60%"></span>
+                            <span class="legend-box level-3" title="達成率 61% - 85%"></span>
+                            <span class="legend-box level-4" title="達成率 86% - 100%"></span>
+                            <span class="legend-text">多</span>
+                        </div>
+                    </div>
+                    <div class="heatmap-container" id="heatmap-grid">
+                        <!-- 由 JS 動態生成 90 天的格子 -->
+                    </div>
+                </div>
+
+                <!-- 雙圖表分析區 (趨勢圖 + 維度分佈) -->
+                <div class="charts-double-grid">
+                    <!-- 左圖：達成率與自我評分趨勢 -->
+                    <div class="chart-box glass-panel">
+                        <div class="chart-header">
+                            <div class="chart-title-wrap">
+                                <span>📈</span>
+                                <div>
+                                    <h4 class="chart-title">近 14 天達成率與評分走勢</h4>
+                                    <p class="chart-desc">綠色柱狀為每日習慣達成率（%），金色點線為自我評分（1~10分）</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="chart-render-area" id="trend-chart-area">
+                            <!-- 由 JS 動態繪製 SVG 響應式走勢圖 -->
+                        </div>
+                    </div>
+
+                    <!-- 右圖：六大維度平均達成率分佈 -->
+                    <div class="chart-box glass-panel">
+                        <div class="chart-header">
+                            <div class="chart-title-wrap">
+                                <span>🎯</span>
+                                <div>
+                                    <h4 class="chart-title">六大核心維度歷史表現分佈</h4>
+                                    <p class="chart-desc">檢視各生活面向的自律平衡度，找出需要多加關注的弱項</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="dimension-breakdown-list" id="dimension-breakdown-bars">
+                            <!-- 由 JS 動態填入長條進度 -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 歷史紀錄詳細時序清單與搜尋表格 -->
+                <div class="history-table-section glass-panel">
+                    <div class="table-section-header">
+                        <div class="table-header-left">
+                            <span>📝</span>
+                            <div>
+                                <h3 class="section-title">每日歷史日誌與覆盤紀錄</h3>
+                                <p class="section-desc">包含每日三大要事、AI 學習成果、成功日記與自評反思</p>
+                            </div>
+                        </div>
+                        <div class="table-search-box">
+                            <input type="text" id="history-search-input" class="form-input" placeholder="🔍 搜尋日期、AI 主題或關鍵字...">
+                        </div>
+                    </div>
+
+                    <div class="history-table-wrapper">
+                        <table class="history-table" id="history-table">
+                            <thead>
+                                <tr>
+                                    <th>日期</th>
+                                    <th>達成率</th>
+                                    <th>評分</th>
+                                    <th>今日三大要事 (Top 3)</th>
+                                    <th>AI 學習成果</th>
+                                    <th>成功日記</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="history-table-body">
+                                <!-- JS 動態注入歷史資料列 -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </section>
 

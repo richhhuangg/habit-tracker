@@ -100,6 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initAiTags();
     initSyncAndForm();
     initWeeklyReview();
+    initAnalyticsView();
 
     // 載入當前日期的資料
     loadDailyData(activeDate);
@@ -219,11 +220,12 @@ function setRating(val) {
     });
 }
 
-// 視圖切換 (每日 vs 每週)
+// 視圖切換 (每日 vs 每週 vs 歷史報表)
 function initViewSwitching() {
     const tabs = document.querySelectorAll('.tab-btn');
     const dailyView = document.getElementById('daily-view');
     const weeklyView = document.getElementById('weekly-view');
+    const analyticsView = document.getElementById('analytics-view');
 
     tabs.forEach(tab => {
         tab.addEventListener('click', () => {
@@ -231,13 +233,20 @@ function initViewSwitching() {
             tab.classList.add('active');
             const view = tab.dataset.view;
 
+            dailyView.classList.remove('active');
+            weeklyView.classList.remove('active');
+            if (analyticsView) analyticsView.classList.remove('active');
+
             if (view === 'daily') {
                 dailyView.classList.add('active');
-                weeklyView.classList.remove('active');
-            } else {
-                dailyView.classList.remove('active');
+            } else if (view === 'weekly') {
                 weeklyView.classList.add('active');
                 loadWeeklyData();
+            } else if (view === 'analytics') {
+                if (analyticsView) {
+                    analyticsView.classList.add('active');
+                    renderAnalyticsDashboard();
+                }
             }
         });
     });
@@ -1078,4 +1087,621 @@ function fallbackCopy(text) {
         showToast('複製失敗，請手動複製', true);
     }
     document.body.removeChild(textArea);
+}
+
+// ==========================================
+// 11. 歷史報表與深度數據分析模組 (Analytics Module)
+// ==========================================
+function initAnalyticsView() {
+    // 匯出 Excel (CSV)
+    const exportCsvBtn = document.getElementById('export-csv-btn');
+    if (exportCsvBtn) {
+        exportCsvBtn.addEventListener('click', exportToCsv);
+    }
+
+    // 備份 JSON
+    const exportJsonBtn = document.getElementById('export-json-btn');
+    if (exportJsonBtn) {
+        exportJsonBtn.addEventListener('click', exportToJson);
+    }
+
+    // 匯入 JSON
+    const importInput = document.getElementById('import-json-input');
+    if (importInput) {
+        importInput.addEventListener('change', importFromJson);
+    }
+
+    // 列印報表
+    const printBtn = document.getElementById('print-report-btn');
+    if (printBtn) {
+        printBtn.addEventListener('click', () => {
+            window.print();
+        });
+    }
+
+    // 歷史表格搜尋過濾
+    const searchInput = document.getElementById('history-search-input');
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            renderHistoryTable(e.target.value.trim().toLowerCase());
+        });
+    }
+}
+
+// 計算某一天的達成數據
+function calculateDayStats(dateStr) {
+    const data = dailyStore[dateStr];
+    if (!data) {
+        return {
+            dateStr,
+            percent: 0,
+            checkedCount: 0,
+            score: 0,
+            aiTime: 0,
+            hasData: false,
+            dimStats: { health: 0, tech: 0, lang: 0, hobby: 0, mind: 0 }
+        };
+    }
+
+    const checks = data.checks || {};
+    // 健康：跑步、睡眠、步數、飲食(四項子項任一項算達標)
+    const isRun = !!checks['chk-run'];
+    const isSleep = !!checks['chk-sleep'];
+    const isSteps = !!checks['chk-steps'];
+    const isDiet = !!checks['chk-diet-veg'] || !!checks['chk-diet-protein'] || !!checks['chk-diet-nosugar'] || !!checks['chk-diet-lessfried'];
+    const healthCount = (isRun ? 1 : 0) + (isSleep ? 1 : 0) + (isSteps ? 1 : 0) + (isDiet ? 1 : 0);
+
+    // AI & 科技 (4項)
+    const techCount = (checks['chk-tech-learn'] ? 1 : 0) + (checks['chk-tech-unit'] ? 1 : 0) + (checks['chk-tech-hands'] ? 1 : 0) + (checks['chk-tech-record'] ? 1 : 0);
+
+    // 語言 (2項)
+    const langCount = (checks['chk-lang-en'] ? 1 : 0) + (checks['chk-lang-read'] ? 1 : 0);
+
+    // 興趣 (2項)
+    const hobbyCount = (checks['chk-hobby-piano'] ? 1 : 0) + (checks['chk-hobby-rest'] ? 1 : 0);
+
+    // 心靈 (4項)
+    const mindCount = (checks['chk-mind-pray'] ? 1 : 0) + (checks['chk-mind-journal'] ? 1 : 0) + (checks['chk-mind-stress'] ? 1 : 0) + (checks['chk-mind-connect'] ? 1 : 0);
+
+    const totalChecked = healthCount + techCount + langCount + hobbyCount + mindCount;
+    const totalPossible = 16;
+    const percent = Math.round((totalChecked / totalPossible) * 100);
+
+    const aiTime = parseInt(data.ai?.time, 10) || 0;
+    const score = parseInt(data.score, 10) || 0;
+
+    const hasAnyContent = totalChecked > 0 || score > 0 || aiTime > 0 ||
+        (data.top3 && data.top3.some(Boolean)) ||
+        (data.journal && data.journal.some(Boolean)) ||
+        (data.ai?.topic || data.ai?.output);
+
+    return {
+        dateStr,
+        percent,
+        checkedCount: totalChecked,
+        score,
+        aiTime,
+        hasData: hasAnyContent,
+        dimStats: {
+            health: healthCount / 4,
+            tech: techCount / 4,
+            lang: langCount / 2,
+            hobby: hobbyCount / 2,
+            mind: mindCount / 4
+        }
+    };
+}
+
+// 渲染歷史報表總入口
+function renderAnalyticsDashboard() {
+    renderKPIs();
+    renderHeatmap();
+    renderTrendChart();
+    renderDimensionBreakdown();
+    renderHistoryTable();
+}
+
+// 1. 渲染 5 大核心 KPI
+function renderKPIs() {
+    const dates = Object.keys(dailyStore).sort();
+    let totalDays = 0;
+    let totalAiMins = 0;
+    let scoreSum = 0;
+    let scoreDays = 0;
+    let totalItemsCompleted = 0;
+
+    dates.forEach(d => {
+        const stats = calculateDayStats(d);
+        if (stats.hasData) {
+            totalDays++;
+            totalAiMins += stats.aiTime;
+            totalItemsCompleted += stats.checkedCount;
+            if (stats.score > 0) {
+                scoreSum += stats.score;
+                scoreDays++;
+            }
+        }
+    });
+
+    // 計算連續打卡天數 (Current Streak)
+    let streak = 0;
+    let checkDate = new Date();
+    // 檢查今天
+    let checkStr = getLocalDateString(checkDate);
+    if (calculateDayStats(checkStr).hasData) {
+        streak++;
+        checkDate.setDate(checkDate.getDate() - 1);
+    } else {
+        // 如果今天還沒打卡，看昨天是否有打卡
+        checkDate.setDate(checkDate.getDate() - 1);
+        checkStr = getLocalDateString(checkDate);
+        if (calculateDayStats(checkStr).hasData) {
+            streak++;
+            checkDate.setDate(checkDate.getDate() - 1);
+        }
+    }
+
+    // 往前連續算
+    while (true) {
+        checkStr = getLocalDateString(checkDate);
+        if (calculateDayStats(checkStr).hasData) {
+            streak++;
+            checkDate.setDate(checkDate.getDate() - 1);
+        } else {
+            break;
+        }
+        if (streak > 365) break; // 防無窮
+    }
+
+    // 更新 DOM
+    document.getElementById('kpi-total-days').textContent = totalDays;
+    document.getElementById('kpi-streak').textContent = streak;
+    document.getElementById('kpi-streak-desc').textContent = streak > 0 ? `連續自律 ${streak} 天，請繼續保持！` : '今天還沒打卡，馬上開始吧！';
+
+    const aiHours = (totalAiMins / 60).toFixed(1);
+    document.getElementById('kpi-ai-hours').textContent = aiHours;
+    document.getElementById('kpi-ai-mins').textContent = `共 ${totalAiMins} 分鐘深度學習`;
+
+    const avgScore = scoreDays > 0 ? (scoreSum / scoreDays).toFixed(1) : '--';
+    document.getElementById('kpi-avg-score').textContent = avgScore;
+    document.getElementById('kpi-total-items').textContent = totalItemsCompleted;
+}
+
+// 2. 渲染 GitHub 風格 打卡熱力圖 (近 90 天)
+function renderHeatmap() {
+    const grid = document.getElementById('heatmap-grid');
+    if (!grid) return;
+    grid.innerHTML = '';
+
+    const today = new Date();
+    const todayStr = getLocalDateString(today);
+    const dayCount = 91; // 13 週 * 7 天
+
+    // 找出起始日期
+    const startDate = new Date();
+    startDate.setDate(today.getDate() - dayCount + 1);
+
+    for (let i = 0; i < dayCount; i++) {
+        const d = new Date(startDate);
+        d.setDate(startDate.getDate() + i);
+        const dStr = getLocalDateString(d);
+        const stats = calculateDayStats(dStr);
+
+        const cell = document.createElement('div');
+        cell.className = 'heat-cell';
+        if (dStr === todayStr) {
+            cell.classList.add('is-today');
+        }
+
+        // 判定顏色等級 (0~4)
+        if (!stats.hasData || stats.percent === 0) {
+            cell.classList.add('level-0');
+        } else if (stats.percent <= 30) {
+            cell.classList.add('level-1');
+        } else if (stats.percent <= 60) {
+            cell.classList.add('level-2');
+        } else if (stats.percent <= 85) {
+            cell.classList.add('level-3');
+        } else {
+            cell.classList.add('level-4');
+        }
+
+        cell.title = `${dStr} (${formatDateToShortMD(dStr)})\n達成率: ${stats.percent}%\n評分: ${stats.score > 0 ? stats.score + '/10' : '未評'}\nAI學習: ${stats.aiTime}分鐘`;
+
+        // 點擊直接跳轉至該日查看/編輯
+        cell.addEventListener('click', () => {
+            saveCurrentDailyData();
+            activeDate = dStr;
+            const dateInput = document.getElementById('current-date-input');
+            if (dateInput) dateInput.value = activeDate;
+            updateDateBadge(activeDate);
+            loadDailyData(activeDate);
+            updateFormatPreview();
+
+            // 切換回每日頁面
+            const dailyTab = document.querySelector('.tab-btn[data-view="daily"]');
+            if (dailyTab) dailyTab.click();
+            showToast(`已跳轉至 ${formatDateToShortMD(dStr)} 的打卡紀錄！`);
+        });
+
+        grid.appendChild(cell);
+    }
+}
+
+// 3. 渲染近 14 天趨勢走勢圖 (SVG 長條達成率 + 折線評分)
+function renderTrendChart() {
+    const area = document.getElementById('trend-chart-area');
+    if (!area) return;
+    area.innerHTML = '';
+
+    const days = 14;
+    const dataPoints = [];
+    const today = new Date();
+
+    for (let i = days - 1; i >= 0; i--) {
+        const d = new Date(today);
+        d.setDate(today.getDate() - i);
+        const dStr = getLocalDateString(d);
+        const stats = calculateDayStats(dStr);
+        dataPoints.push({
+            date: dStr,
+            short: `${d.getMonth() + 1}/${d.getDate()}`,
+            rate: stats.percent, // 0~100
+            score: stats.score // 0~10
+        });
+    }
+
+    const svgWidth = 560;
+    const svgHeight = 200;
+    const padX = 35;
+    const padY = 25;
+    const chartW = svgWidth - padX * 2;
+    const chartH = svgHeight - padY * 2;
+    const barWidth = 16;
+    const step = chartW / days;
+
+    let svg = `<svg class="trend-svg" viewBox="0 0 ${svgWidth} ${svgHeight}">
+        <defs>
+            <linearGradient id="bar-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stop-color="#10b981" stop-opacity="0.9"/>
+                <stop offset="100%" stop-color="#06b6d4" stop-opacity="0.3"/>
+            </linearGradient>
+        </defs>
+        <!-- 網格基準線 -->
+        <line x1="${padX}" y1="${padY}" x2="${svgWidth - padX}" y2="${padY}" class="axis-line" stroke-dasharray="3,3"/>
+        <line x1="${padX}" y1="${padY + chartH / 2}" x2="${svgWidth - padX}" y2="${padY + chartH / 2}" class="axis-line" stroke-dasharray="3,3"/>
+        <line x1="${padX}" y1="${padY + chartH}" x2="${svgWidth - padX}" y2="${padY + chartH}" class="axis-line"/>
+    `;
+
+    // 柱狀圖 (達成率)
+    dataPoints.forEach((pt, idx) => {
+        const x = padX + idx * step + (step - barWidth) / 2;
+        const barH = (pt.rate / 100) * chartH;
+        const y = padY + chartH - barH;
+
+        svg += `<rect class="chart-bar" x="${x}" y="${y}" width="${barWidth}" height="${barH}">
+            <title>${pt.date}: 達成率 ${pt.rate}%</title>
+        </rect>`;
+
+        // 日期文字標籤 (每隔兩天顯示一次以防擁擠)
+        if (idx % 2 === 0 || idx === days - 1) {
+            svg += `<text x="${x + barWidth / 2}" y="${svgHeight - 6}" class="axis-text">${pt.short}</text>`;
+        }
+    });
+
+    // 折線圖 (自我評分 1~10 分)
+    const linePoints = [];
+    dataPoints.forEach((pt, idx) => {
+        if (pt.score > 0) {
+            const x = padX + idx * step + step / 2;
+            const y = padY + chartH - (pt.score / 10) * chartH;
+            linePoints.push({ x, y, score: pt.score, date: pt.date });
+        }
+    });
+
+    if (linePoints.length > 1) {
+        let dPath = `M ${linePoints[0].x} ${linePoints[0].y}`;
+        for (let i = 1; i < linePoints.length; i++) {
+            dPath += ` L ${linePoints[i].x} ${linePoints[i].y}`;
+        }
+        svg += `<path d="${dPath}" class="trend-line"/>`;
+    }
+
+    // 節點
+    linePoints.forEach(p => {
+        svg += `<circle cx="${p.x}" cy="${p.y}" r="4.5" class="trend-dot">
+            <title>${p.date}: 自我評分 ${p.score} 分</title>
+        </circle>`;
+    });
+
+    svg += `</svg>`;
+    area.innerHTML = svg;
+}
+
+// 4. 渲染六大維度歷史平均達成率長條分佈
+function renderDimensionBreakdown() {
+    const container = document.getElementById('dimension-breakdown-bars');
+    if (!container) return;
+    container.innerHTML = '';
+
+    const dates = Object.keys(dailyStore);
+    if (dates.length === 0) {
+        container.innerHTML = '<p style="color:var(--text-muted);font-size:0.85rem;">尚無歷史紀錄，開始打卡即可看到各維度分佈！</p>';
+        return;
+    }
+
+    const sums = { health: 0, tech: 0, lang: 0, hobby: 0, mind: 0 };
+    let validDays = 0;
+
+    dates.forEach(d => {
+        const stats = calculateDayStats(d);
+        if (stats.hasData) {
+            validDays++;
+            sums.health += stats.dimStats.health;
+            sums.tech += stats.dimStats.tech;
+            sums.lang += stats.dimStats.lang;
+            sums.hobby += stats.dimStats.hobby;
+            sums.mind += stats.dimStats.mind;
+        }
+    });
+
+    if (validDays === 0) validDays = 1;
+
+    const dimensions = [
+        { key: 'health', icon: '🏃', label: '一、健康與體能 (長跑/飲食/睡眠/步數)', pct: Math.round((sums.health / validDays) * 100) },
+        { key: 'tech', icon: '💻', label: '二、專業技術與 AI 學習 (實作/單元/紀錄)', pct: Math.round((sums.tech / validDays) * 100) },
+        { key: 'lang', icon: '🇺🇸', label: '三、語言與知識 (英文/閱讀)', pct: Math.round((sums.lang / validDays) * 100) },
+        { key: 'hobby', icon: '🎹', label: '四、興趣與生活樂趣 (鋼琴/休閒留白)', pct: Math.round((sums.hobby / validDays) * 100) },
+        { key: 'mind', icon: '🧘', label: '五、心靈與情緒 (靜心/感恩日記/人際)', pct: Math.round((sums.mind / validDays) * 100) }
+    ];
+
+    dimensions.forEach(dim => {
+        const row = document.createElement('div');
+        row.className = 'dim-progress-row';
+        row.innerHTML = `
+            <div class="dim-progress-head">
+                <span class="dim-progress-title">${dim.icon} ${dim.label}</span>
+                <span class="dim-progress-stat">${dim.pct}%</span>
+            </div>
+            <div class="dim-progress-bar-wrap">
+                <div class="dim-progress-bar-fill" style="width: ${dim.pct}%"></div>
+            </div>
+        `;
+        container.appendChild(row);
+    });
+}
+
+// 5. 渲染歷史詳細日誌表格 (支援搜尋過濾)
+function renderHistoryTable(keyword = '') {
+    const tbody = document.getElementById('history-table-body');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    // 取得所有日期並降序排序（最新在最上）
+    const dates = Object.keys(dailyStore).sort().reverse();
+    const filteredDates = dates.filter(d => {
+        const data = dailyStore[d] || {};
+        if (!keyword) return true;
+        const text = `${d} ${data.ai?.topic || ''} ${data.ai?.output || ''} ${(data.top3 || []).join(' ')} ${(data.journal || []).join(' ')} ${data.best_thing || ''}`.toLowerCase();
+        return text.includes(keyword);
+    });
+
+    if (filteredDates.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:2rem;">沒有找到符合的歷史紀錄</td></tr>`;
+        return;
+    }
+
+    filteredDates.forEach(d => {
+        const data = dailyStore[d] || {};
+        const stats = calculateDayStats(d);
+        const tr = document.createElement('tr');
+
+        // Top 3 要事
+        const top3List = (data.top3 || []).filter(Boolean);
+        const top3Html = top3List.length > 0
+            ? top3List.map((t, idx) => `<div><small style="color:#34d399;">${idx + 1}.</small> ${t}</div>`).join('')
+            : '<span style="color:var(--text-dim);">無</span>';
+
+        // AI 成果
+        let aiHtml = '<span style="color:var(--text-dim);">無記錄</span>';
+        if (data.ai?.topic || data.ai?.output) {
+            aiHtml = `<strong>${data.ai.topic || '自主學習'}</strong> (${data.ai.time || 0}分)<br><small style="color:var(--text-muted);">${(data.ai.output || '').substring(0, 50)}${(data.ai.output || '').length > 50 ? '...' : ''}</small>`;
+        }
+
+        // 感恩日記
+        const journalList = (data.journal || []).filter(Boolean);
+        const journalHtml = journalList.length > 0
+            ? journalList.map(j => `<div>✨ ${j}</div>`).join('')
+            : '<span style="color:var(--text-dim);">無</span>';
+
+        tr.innerHTML = `
+            <td><span class="table-date-badge">${d}</span><br><small style="color:var(--text-dim);">${formatDateToShortMD(d)}</small></td>
+            <td><span class="table-rate-pill">${stats.percent}% (${stats.checkedCount}/16)</span></td>
+            <td><span class="table-score-pill">${stats.score > 0 ? stats.score + ' ★' : '--'}</span></td>
+            <td class="table-summary-cell">${top3Html}</td>
+            <td class="table-summary-cell">${aiHtml}</td>
+            <td class="table-summary-cell">${journalHtml}</td>
+            <td>
+                <div class="table-action-btns">
+                    <button type="button" class="btn-sm btn-secondary edit-day-btn" data-date="${d}">查看／編輯</button>
+                    <button type="button" class="btn-sm btn-ghost copy-day-btn" data-date="${d}">複製</button>
+                </div>
+            </td>
+        `;
+
+        // 綁定查看按鈕
+        tr.querySelector('.edit-day-btn').addEventListener('click', () => {
+            saveCurrentDailyData();
+            activeDate = d;
+            const dateInput = document.getElementById('current-date-input');
+            if (dateInput) dateInput.value = activeDate;
+            updateDateBadge(activeDate);
+            loadDailyData(activeDate);
+            updateFormatPreview();
+
+            const dailyTab = document.querySelector('.tab-btn[data-view="daily"]');
+            if (dailyTab) dailyTab.click();
+            showToast(`已切換至 ${d} 的打卡頁面`);
+        });
+
+        // 綁定複製當日文字
+        tr.querySelector('.copy-day-btn').addEventListener('click', () => {
+            const originalDate = activeDate;
+            activeDate = d;
+            const text = getFullSummaryText();
+            activeDate = originalDate;
+
+            navigator.clipboard.writeText(text).then(() => {
+                showToast(`📋 已複製 ${formatDateToShortMD(d)} 的成果日報！`);
+            }).catch(() => fallbackCopy(text));
+        });
+
+        tbody.appendChild(tr);
+    });
+}
+
+// 6. 匯出 Excel (CSV) 格式報表
+function exportToCsv() {
+    const dates = Object.keys(dailyStore).sort();
+    if (dates.length === 0) {
+        showToast('目前尚無歷史紀錄可匯出！', true);
+        return;
+    }
+
+    // CSV 表頭
+    const headers = [
+        '日期',
+        '月日簡稱',
+        '達成率(%)',
+        '自我評分(1-10)',
+        '打卡完成項目數',
+        'AI學習主題',
+        'AI學習時間(分)',
+        'AI實作成果',
+        'AI問題與下一步',
+        '今日要事1',
+        '今日要事2',
+        '今日要事3',
+        '感恩日記1',
+        '感恩日記2',
+        '感恩日記3',
+        '最好的一件事',
+        '明天改善的事',
+        '打勾完成項目清單'
+    ];
+
+    const escapeCsv = (str) => {
+        if (!str) return '""';
+        return `"${String(str).replace(/"/g, '""').replace(/\n/g, ' ')}"`;
+    };
+
+    const rows = [headers.join(',')];
+
+    dates.forEach(d => {
+        const data = dailyStore[d] || {};
+        const stats = calculateDayStats(d);
+
+        // 整理打勾項目文字清單
+        const checkedLabels = [];
+        const checks = data.checks || {};
+        const allCheckEls = document.querySelectorAll('.checklist-column input[type="checkbox"]');
+        allCheckEls.forEach(chk => {
+            if (checks[chk.id] && chk.dataset.label) {
+                checkedLabels.push(chk.dataset.label);
+            }
+        });
+
+        const row = [
+            escapeCsv(d),
+            escapeCsv(formatDateToShortMD(d)),
+            stats.percent,
+            stats.score,
+            stats.checkedCount,
+            escapeCsv(data.ai?.topic),
+            data.ai?.time || 0,
+            escapeCsv(data.ai?.output),
+            escapeCsv(`${data.ai?.problems || ''} | ${data.ai?.next || ''}`),
+            escapeCsv(data.top3?.[0]),
+            escapeCsv(data.top3?.[1]),
+            escapeCsv(data.top3?.[2]),
+            escapeCsv(data.journal?.[0]),
+            escapeCsv(data.journal?.[1]),
+            escapeCsv(data.journal?.[2]),
+            escapeCsv(data.best_thing),
+            escapeCsv(data.improve_thing),
+            escapeCsv(checkedLabels.join('、'))
+        ];
+        rows.push(row.join(','));
+    });
+
+    // 加上 UTF-8 BOM (\uFEFF) 讓 Excel 打開中文絕不亂碼！
+    const csvContent = '\uFEFF' + rows.join('\r\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `個人平衡計分卡_歷史報表_${getLocalDateString(new Date())}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('📥 成功下載 Excel (CSV) 歷史報表！');
+}
+
+// 7. 備份完整 JSON
+function exportToJson() {
+    const backupData = {
+        version: '1.0',
+        exportedAt: new Date().toISOString(),
+        daily: dailyStore,
+        weekly: weeklyStore,
+        settings: settings
+    };
+
+    const jsonStr = JSON.stringify(backupData, null, 2);
+    const blob = new Blob([jsonStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `habit_tracker_backup_${getLocalDateString(new Date())}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('💾 成功備份完整 JSON 檔案！');
+}
+
+// 8. 匯入 JSON 備份
+function importFromJson(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+        try {
+            const data = JSON.parse(event.target.result);
+            if (data.daily) {
+                // 合併每日資料
+                dailyStore = { ...dailyStore, ...data.daily };
+                localStorage.setItem(STORAGE_KEYS.DAILY, JSON.stringify(dailyStore));
+            }
+            if (data.weekly) {
+                weeklyStore = { ...weeklyStore, ...data.weekly };
+                localStorage.setItem(STORAGE_KEYS.WEEKLY, JSON.stringify(weeklyStore));
+            }
+            if (data.settings) {
+                settings = { ...settings, ...data.settings };
+                localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(settings));
+            }
+
+            loadDailyData(activeDate);
+            renderAnalyticsDashboard();
+            showToast('🎉 成功匯入備份數據！');
+        } catch (err) {
+            console.error('Import error:', err);
+            showToast('匯入失敗：JSON 檔案格式不符合', true);
+        }
+    };
+    reader.readAsText(file);
+    e.target.value = ''; // 重置 input
 }
