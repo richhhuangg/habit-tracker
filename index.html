@@ -1,46 +1,860 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Habit Tracker</title>
-    <link rel="stylesheet" href="style.css">
-    <!-- Google Fonts for a modern look -->
+    <title>每日 To-do List ｜ 個人平衡計分卡</title>
+    <meta name="description" content="個人平衡計分卡與每日 To-do List，涵蓋健康長跑、AI 技術成長、英文能力、興趣培養、心靈平衡與人際關係，支援同步記錄至 Google 表單與試算表。">
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+TC:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
 </head>
-<body>
-    <div class="container">
-        <header>
-            <h1>My Habits</h1>
-            <p id="current-date">Today</p>
+<body class="theme-dark">
+    <!-- 背景裝飾光暈 -->
+    <div class="ambient-glow glow-1"></div>
+    <div class="ambient-glow glow-2"></div>
+    <div class="ambient-glow glow-3"></div>
+
+    <div class="app-layout">
+        <!-- 頂部導覽列 -->
+        <header class="navbar">
+            <div class="nav-left">
+                <div class="app-logo">
+                    <span class="logo-icon">🎯</span>
+                    <div>
+                        <h1 class="logo-title">個人平衡計分卡</h1>
+                        <p class="logo-subtitle">Daily Balanced Scorecard & AI Mastery</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 日期控制中心 -->
+            <div class="nav-date-controls">
+                <button type="button" class="btn-icon" id="prev-day-btn" title="前一天">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
+                </button>
+                <div class="date-picker-wrapper">
+                    <input type="date" id="current-date-input" class="date-input" aria-label="選擇紀錄日期">
+                    <span id="date-display-badge" class="date-badge">今天</span>
+                </div>
+                <button type="button" class="btn-icon" id="next-day-btn" title="後一天">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+                </button>
+                <button type="button" class="btn-secondary btn-sm" id="today-btn">回到今天</button>
+            </div>
+
+            <div class="nav-right">
+                <button type="button" class="btn-action-ghost" id="open-principles-btn" title="查看五大執行原則">
+                    <span class="btn-icon-emoji">🌟</span> 執行原則
+                </button>
+                <button type="button" class="btn-action-ghost" id="open-settings-btn" title="Google 表單同步設定">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                    <span>Google 表單設定</span>
+                </button>
+                <button type="button" class="btn-theme-toggle" id="theme-toggle" aria-label="切換深淺模式">
+                    <span id="theme-icon">🌙</span>
+                </button>
+            </div>
         </header>
 
-        <section class="add-habit">
-            <form id="add-habit-form">
-                <input type="text" id="habit-input" placeholder="Add a new habit..." required autocomplet="off">
-                <button type="submit">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        <!-- 視圖切換標籤 (每日計分卡 vs 每週回顧) -->
+        <div class="view-switch-container">
+            <div class="view-switch-tabs">
+                <button type="button" class="tab-btn active" data-view="daily">
+                    <span>📅</span> 每日 To-do 與成果記錄
                 </button>
-            </form>
-        </section>
+                <button type="button" class="tab-btn" data-view="weekly">
+                    <span>🔄</span> 七、每週回顧專區
+                </button>
+            </div>
+            <div class="quick-status-chip" id="sync-status-indicator">
+                <span class="status-dot"></span>
+                <span id="sync-status-text">本機儲存已就緒</span>
+            </div>
+        </div>
 
-        <section class="habits-list">
-            <h2>Today's Goals</h2>
-            <ul id="habit-list">
-                <!-- Habits will be injected here by JS -->
-                <li class="empty-state">No habits yet. Add one above!</li>
-            </ul>
-        </section>
+        <!-- ======================= 每日視圖 (DAILY VIEW) ======================= -->
+        <main id="daily-view" class="view-content active">
+            <!-- 核心目標橫幅與進度儀表板 -->
+            <section class="scorecard-overview-card glass-panel">
+                <div class="overview-header">
+                    <div>
+                        <div class="target-badge">🎯 每日核心目標</div>
+                        <h2 class="target-title">健康長跑 × 專業技術成長 × 英文能力 × 興趣培養 × 心靈平衡 × 人際關係</h2>
+                    </div>
+                    <div class="overall-progress-circle-box">
+                        <div class="circle-progress" id="progress-circle">
+                            <span class="progress-percent" id="total-progress-percent">0%</span>
+                            <span class="progress-label">今日達成率</span>
+                        </div>
+                    </div>
+                </div>
 
-        <section class="weekly-progress">
-            <h2>Weekly Progress</h2>
-            <div id="weekly-chart" class="chart-container">
-                <!-- Weekly bars will be injected here -->
+                <!-- 六大維度迷你儀表板 -->
+                <div class="dimension-progress-grid">
+                    <div class="dim-stat-card" data-dim="health">
+                        <div class="dim-stat-icon">🏃</div>
+                        <div class="dim-stat-info">
+                            <span class="dim-stat-label">健康與體能</span>
+                            <span class="dim-stat-count" id="stat-health">0/4 達標</span>
+                        </div>
+                        <div class="dim-bar"><div class="dim-bar-fill" id="bar-health" style="width: 0%"></div></div>
+                    </div>
+                    <div class="dim-stat-card" data-dim="tech">
+                        <div class="dim-stat-icon">💻</div>
+                        <div class="dim-stat-info">
+                            <span class="dim-stat-label">AI 與專業</span>
+                            <span class="dim-stat-count" id="stat-tech">0/4 達標</span>
+                        </div>
+                        <div class="dim-bar"><div class="dim-bar-fill" id="bar-tech" style="width: 0%"></div></div>
+                    </div>
+                    <div class="dim-stat-card" data-dim="lang">
+                        <div class="dim-stat-icon">🇺🇸</div>
+                        <div class="dim-stat-info">
+                            <span class="dim-stat-label">語言與知識</span>
+                            <span class="dim-stat-count" id="stat-lang">0/2 達標</span>
+                        </div>
+                        <div class="dim-bar"><div class="dim-bar-fill" id="bar-lang" style="width: 0%"></div></div>
+                    </div>
+                    <div class="dim-stat-card" data-dim="hobby">
+                        <div class="dim-stat-icon">🎹</div>
+                        <div class="dim-stat-info">
+                            <span class="dim-stat-label">興趣與樂趣</span>
+                            <span class="dim-stat-count" id="stat-hobby">0/2 達標</span>
+                        </div>
+                        <div class="dim-bar"><div class="dim-bar-fill" id="bar-hobby" style="width: 0%"></div></div>
+                    </div>
+                    <div class="dim-stat-card" data-dim="mind">
+                        <div class="dim-stat-icon">🧘</div>
+                        <div class="dim-stat-info">
+                            <span class="dim-stat-label">心靈與情緒</span>
+                            <span class="dim-stat-count" id="stat-mind">0/4 達標</span>
+                        </div>
+                        <div class="dim-bar"><div class="dim-bar-fill" id="bar-mind" style="width: 0%"></div></div>
+                    </div>
+                    <div class="dim-stat-card" data-dim="score">
+                        <div class="dim-stat-icon">⭐</div>
+                        <div class="dim-stat-info">
+                            <span class="dim-stat-label">整體自評</span>
+                            <span class="dim-stat-count" id="stat-score">未評分</span>
+                        </div>
+                        <div class="dim-bar"><div class="dim-bar-fill" id="bar-score" style="width: 0%"></div></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 兩欄式主介面：左側打勾清單，右側記錄填寫區 -->
+            <div class="daily-main-grid">
+                <!-- 左側：五大核心行動打勾清單 -->
+                <div class="checklist-column">
+                    <!-- 一、健康與體能 -->
+                    <section class="habit-pillar-card glass-panel" id="pillar-health">
+                        <div class="pillar-header">
+                            <div class="pillar-title-group">
+                                <span class="pillar-emoji">🏃</span>
+                                <div>
+                                    <h3 class="pillar-title">一、健康與體能</h3>
+                                    <p class="pillar-desc">長跑體能打底 × 優質蛋白質與睡眠修復</p>
+                                </div>
+                            </div>
+                            <span class="pillar-badge" id="badge-health">0/4</span>
+                        </div>
+
+                        <div class="checklist-items">
+                            <label class="check-item-row" for="chk-run">
+                                <input type="checkbox" id="chk-run" class="custom-checkbox" data-cat="health" data-label="跑步訓練／休息日恢復（依每週計畫）">
+                                <span class="checkmark"></span>
+                                <span class="item-text"><strong>跑步訓練／休息日恢復</strong><span class="item-sub">（依每週訓練計畫彈性執行）</span></span>
+                            </label>
+
+                            <!-- 飲食子群組 -->
+                            <div class="sub-group-card">
+                                <div class="sub-group-title">
+                                    <span>🥗 健康飲食</span>
+                                    <small class="sub-hint">（以下至少達成一項）</small>
+                                </div>
+                                <div class="sub-group-items">
+                                    <label class="check-item-row sub-row" for="chk-diet-veg">
+                                        <input type="checkbox" id="chk-diet-veg" class="custom-checkbox diet-sub" data-cat="health" data-label="健康飲食：深綠色蔬菜 2 份以上">
+                                        <span class="checkmark"></span>
+                                        <span class="item-text">深綠色蔬菜 2 份以上</span>
+                                    </label>
+                                    <label class="check-item-row sub-row" for="chk-diet-protein">
+                                        <input type="checkbox" id="chk-diet-protein" class="custom-checkbox diet-sub" data-cat="health" data-label="健康飲食：蛋白質攝取約 120g">
+                                        <span class="checkmark"></span>
+                                        <span class="item-text">蛋白質攝取約 120g</span>
+                                    </label>
+                                    <label class="check-item-row sub-row" for="chk-diet-nosugar">
+                                        <input type="checkbox" id="chk-diet-nosugar" class="custom-checkbox diet-sub" data-cat="health" data-label="健康飲食：不喝含糖飲料">
+                                        <span class="checkmark"></span>
+                                        <span class="item-text">不喝含糖飲料</span>
+                                    </label>
+                                    <label class="check-item-row sub-row" for="chk-diet-lessfried">
+                                        <input type="checkbox" id="chk-diet-lessfried" class="custom-checkbox diet-sub" data-cat="health" data-label="健康飲食：減少炸物與高度加工食品">
+                                        <span class="checkmark"></span>
+                                        <span class="item-text">減少炸物與高度加工食品</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <label class="check-item-row" for="chk-sleep">
+                                <input type="checkbox" id="chk-sleep" class="custom-checkbox" data-cat="health" data-label="睡眠 7 小時以上">
+                                <span class="checkmark"></span>
+                                <span class="item-text"><strong>😴 睡眠 7 小時以上</strong></span>
+                            </label>
+
+                            <label class="check-item-row" for="chk-steps">
+                                <input type="checkbox" id="chk-steps" class="custom-checkbox" data-cat="health" data-label="每日步數達 8,000 步">
+                                <span class="checkmark"></span>
+                                <span class="item-text"><strong>🚶 每日步數達 8,000 步</strong><span class="item-sub">（依跑步量與恢復狀況彈性調整）</span></span>
+                            </label>
+                        </div>
+                    </section>
+
+                    <!-- 二、專業技術與 AI 學習 -->
+                    <section class="habit-pillar-card glass-panel" id="pillar-tech">
+                        <div class="pillar-header">
+                            <div class="pillar-title-group">
+                                <span class="pillar-emoji">💻</span>
+                                <div>
+                                    <h3 class="pillar-title">二、專業技術與 AI 學習</h3>
+                                    <p class="pillar-desc">持續累積 AI 技術，提升職涯競爭力</p>
+                                </div>
+                            </div>
+                            <span class="pillar-badge" id="badge-tech">0/4</span>
+                        </div>
+
+                        <div class="time-schedule-pill">
+                            <span class="schedule-tag">⏱️ 時間安排</span>
+                            <span>工作日：至少 <strong>20 分鐘</strong> ｜ 休假日：目標 <strong>60～90 分鐘</strong></span>
+                        </div>
+
+                        <div class="checklist-items">
+                            <label class="check-item-row" for="chk-tech-learn">
+                                <input type="checkbox" id="chk-tech-learn" class="custom-checkbox" data-cat="tech" data-label="AI 技術學習 30 分鐘">
+                                <span class="checkmark"></span>
+                                <span class="item-text"><strong>🤖 AI 技術學習 30 分鐘</strong></span>
+                            </label>
+                            <label class="check-item-row" for="chk-tech-unit">
+                                <input type="checkbox" id="chk-tech-unit" class="custom-checkbox" data-cat="tech" data-label="完成一個學習單元或主題">
+                                <span class="checkmark"></span>
+                                <span class="item-text"><strong>📚 完成一個學習單元或主題</strong></span>
+                            </label>
+                            <label class="check-item-row" for="chk-tech-hands">
+                                <input type="checkbox" id="chk-tech-hands" class="custom-checkbox" data-cat="tech" data-label="動手實作／寫程式 10～20 分鐘">
+                                <span class="checkmark"></span>
+                                <span class="item-text"><strong>🛠️ 動手實作／寫程式 10～20 分鐘</strong></span>
+                            </label>
+                            <label class="check-item-row" for="chk-tech-record">
+                                <input type="checkbox" id="chk-tech-record" class="custom-checkbox" data-cat="tech" data-label="記錄一項學習成果、程式範例或問題解法">
+                                <span class="checkmark"></span>
+                                <span class="item-text"><strong>📝 記錄一項學習成果、程式範例或問題解法</strong></span>
+                            </label>
+                        </div>
+
+                        <!-- 快速輪替主題標籤 (點擊可填入右側學習主題) -->
+                        <div class="ai-tags-box">
+                            <div class="ai-tags-title">💡 今日學習方向快捷填入（點擊帶入主題）：</div>
+                            <div class="ai-tags-chips">
+                                <button type="button" class="tag-chip" data-topic="Azure AI 與 AI-103 考試準備">Azure AI 與 AI-103</button>
+                                <button type="button" class="tag-chip" data-topic="Python、OpenAI API／SDK 實戰">Python / OpenAI API</button>
+                                <button type="button" class="tag-chip" data-topic="RAG、Embedding、向量搜尋檢索增強">RAG 與向量搜尋</button>
+                                <button type="button" class="tag-chip" data-topic="AI Agent、工具呼叫與工作流程自動化">AI Agent & 工具呼叫</button>
+                                <button type="button" class="tag-chip" data-topic="Guardrails、模型評估、資安與部署">Guardrails & 評估部署</button>
+                                <button type="button" class="tag-chip" data-topic="AI 實作專案展示整合">AI 實作專案</button>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- 三、語言與知識 -->
+                    <section class="habit-pillar-card glass-panel" id="pillar-lang">
+                        <div class="pillar-header">
+                            <div class="pillar-title-group">
+                                <span class="pillar-emoji">🇺🇸</span>
+                                <div>
+                                    <h3 class="pillar-title">三、語言與知識</h3>
+                                    <p class="pillar-desc">聽力口說突破 × 深度閱讀積累</p>
+                                </div>
+                            </div>
+                            <span class="pillar-badge" id="badge-lang">0/2</span>
+                        </div>
+                        <div class="checklist-items">
+                            <label class="check-item-row" for="chk-lang-en">
+                                <input type="checkbox" id="chk-lang-en" class="custom-checkbox" data-cat="lang" data-label="英文學習 30 分鐘（聽力、口說或 Engoo）">
+                                <span class="checkmark"></span>
+                                <span class="item-text"><strong>英文學習 30 分鐘</strong><span class="item-sub">（聽力、口說或 Engoo）</span></span>
+                            </label>
+                            <label class="check-item-row" for="chk-lang-read">
+                                <input type="checkbox" id="chk-lang-read" class="custom-checkbox" data-cat="lang" data-label="閱讀 20 分鐘（技術或非技術書籍）">
+                                <span class="checkmark"></span>
+                                <span class="item-text"><strong>📖 閱讀 20 分鐘</strong><span class="item-sub">（技術或非技術書籍）</span></span>
+                            </label>
+                        </div>
+                    </section>
+
+                    <!-- 四、興趣與生活樂趣 -->
+                    <section class="habit-pillar-card glass-panel" id="pillar-hobby">
+                        <div class="pillar-header">
+                            <div class="pillar-title-group">
+                                <span class="pillar-emoji">🎹</span>
+                                <div>
+                                    <h3 class="pillar-title">四、興趣與生活樂趣</h3>
+                                    <p class="pillar-desc">琴聲療癒 × 留白無壓時光</p>
+                                </div>
+                            </div>
+                            <span class="pillar-badge" id="badge-hobby">0/2</span>
+                        </div>
+                        <div class="checklist-items">
+                            <label class="check-item-row" for="chk-hobby-piano">
+                                <input type="checkbox" id="chk-hobby-piano" class="custom-checkbox" data-cat="hobby" data-label="鋼琴練習 20 分鐘">
+                                <span class="checkmark"></span>
+                                <span class="item-text"><strong>鋼琴練習 20 分鐘</strong></span>
+                            </label>
+                            <label class="check-item-row" for="chk-hobby-rest">
+                                <input type="checkbox" id="chk-hobby-rest" class="custom-checkbox" data-cat="hobby" data-label="安排一段不追求績效的休閒時間">
+                                <span class="checkmark"></span>
+                                <span class="item-text"><strong>安排一段不追求績效的休閒時間</strong></span>
+                            </label>
+                        </div>
+                    </section>
+
+                    <!-- 五、心靈與情緒 -->
+                    <section class="habit-pillar-card glass-panel" id="pillar-mind">
+                        <div class="pillar-header">
+                            <div class="pillar-title-group">
+                                <span class="pillar-emoji">🧘</span>
+                                <div>
+                                    <h3 class="pillar-title">五、心靈與情緒</h3>
+                                    <p class="pillar-desc">靜心沈澱 × 感恩聚焦 × 溫暖連結</p>
+                                </div>
+                            </div>
+                            <span class="pillar-badge" id="badge-mind">0/4</span>
+                        </div>
+                        <div class="checklist-items">
+                            <label class="check-item-row" for="chk-mind-pray">
+                                <input type="checkbox" id="chk-mind-pray" class="custom-checkbox" data-cat="mind" data-label="靜心／禱告 10 分鐘">
+                                <span class="checkmark"></span>
+                                <span class="item-text"><strong>靜心／禱告 10 分鐘</strong></span>
+                            </label>
+                            <label class="check-item-row" for="chk-mind-journal">
+                                <input type="checkbox" id="chk-mind-journal" class="custom-checkbox" data-cat="mind" data-label="成功日記：記錄今天 3 件值得感恩或做得不錯的事">
+                                <span class="checkmark"></span>
+                                <span class="item-text"><strong>✍️ 成功日記：記錄今天 3 件感恩或做得不錯的事</strong></span>
+                            </label>
+                            <label class="check-item-row" for="chk-mind-stress">
+                                <input type="checkbox" id="chk-mind-stress" class="custom-checkbox" data-cat="mind" data-label="檢視自己的情緒與壓力，適時休息">
+                                <span class="checkmark"></span>
+                                <span class="item-text"><strong>檢視自己的情緒與壓力，適時休息</strong></span>
+                            </label>
+                            <label class="check-item-row" for="chk-mind-connect">
+                                <input type="checkbox" id="chk-mind-connect" class="custom-checkbox" data-cat="mind" data-label="為人際關係或交友機會採取一個小行動">
+                                <span class="checkmark"></span>
+                                <span class="item-text"><strong>為人際關係或交友機會採取一個小行動</strong></span>
+                            </label>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- 右側：六、每日完成紀錄 (詳細填寫區與同步送出) -->
+                <div class="log-form-column">
+                    <section class="log-card glass-panel" id="daily-log-section">
+                        <div class="log-card-header">
+                            <div class="log-title-wrap">
+                                <span class="log-emoji">📅</span>
+                                <div>
+                                    <h3 class="log-title">六、每日完成紀錄</h3>
+                                    <p class="log-date-label">當前填寫日期：<span id="log-selected-date-str" class="highlight-date">2026-10-25</span></p>
+                                </div>
+                            </div>
+                            <div class="header-action-group">
+                                <button type="button" class="btn-sm btn-ghost" id="quick-fill-template-btn" title="帶入預設範本">填寫提示</button>
+                            </div>
+                        </div>
+
+                        <form id="daily-record-form" class="log-form">
+                            <!-- 1. 今日最重要的三件事 -->
+                            <div class="form-group-block">
+                                <label class="form-block-label">
+                                    <span class="label-badge">🎯</span>
+                                    <span>今日最重要的三件事 (Top 3 Priorities)</span>
+                                </label>
+                                <div class="top3-inputs">
+                                    <div class="input-with-num">
+                                        <span class="num-badge">1</span>
+                                        <input type="text" id="top3-1" class="form-input" placeholder="第一件關鍵任務（核心首要）" autocomplete="off">
+                                    </div>
+                                    <div class="input-with-num">
+                                        <span class="num-badge">2</span>
+                                        <input type="text" id="top3-2" class="form-input" placeholder="第二件重要任務" autocomplete="off">
+                                    </div>
+                                    <div class="input-with-num">
+                                        <span class="num-badge">3</span>
+                                        <input type="text" id="top3-3" class="form-input" placeholder="第三件重要任務" autocomplete="off">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 2. 今日 AI 學習成果 -->
+                            <div class="form-group-block">
+                                <label class="form-block-label">
+                                    <span class="label-badge">💻</span>
+                                    <span>今日 AI 學習成果 (AI Mastery Log)</span>
+                                </label>
+                                <div class="ai-study-form-grid">
+                                    <div class="field-row">
+                                        <label for="ai-topic" class="field-label">學習主題：</label>
+                                        <input type="text" id="ai-topic" class="form-input" placeholder="例如：RAG 向量搜尋實作、OpenAI Function Calling" autocomplete="off">
+                                    </div>
+                                    <div class="field-row">
+                                        <label for="ai-time" class="field-label">學習時間：</label>
+                                        <div class="time-input-wrap">
+                                            <input type="number" id="ai-time" class="form-input" placeholder="30" min="0" step="5">
+                                            <span class="unit-text">分鐘</span>
+                                        </div>
+                                    </div>
+                                    <div class="field-col">
+                                        <label for="ai-output" class="field-label">實作／筆記成果：</label>
+                                        <textarea id="ai-output" class="form-textarea" rows="2" placeholder="寫了哪些程式範例、筆記或 GitHub Commit..."></textarea>
+                                    </div>
+                                    <div class="field-row-split">
+                                        <div class="field-col">
+                                            <label for="ai-problems" class="field-label">遇到的問題：</label>
+                                            <textarea id="ai-problems" class="form-textarea" rows="2" placeholder="遇到的 bug、不懂的概念..."></textarea>
+                                        </div>
+                                        <div class="field-col">
+                                            <label for="ai-next" class="field-label">下一步：</label>
+                                            <textarea id="ai-next" class="form-textarea" rows="2" placeholder="明日預計接續實作的單元..."></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 3. 今日感恩與成功日記 -->
+                            <div class="form-group-block">
+                                <label class="form-block-label">
+                                    <span class="label-badge">🙏</span>
+                                    <span>今日感恩與成功日記（記錄 3 件好事）</span>
+                                </label>
+                                <div class="gratitude-inputs">
+                                    <div class="input-with-icon">
+                                        <span class="input-icon">✨</span>
+                                        <input type="text" id="journal-1" class="form-input" placeholder="值得感恩或做得不錯的事 1..." autocomplete="off">
+                                    </div>
+                                    <div class="input-with-icon">
+                                        <span class="input-icon">✨</span>
+                                        <input type="text" id="journal-2" class="form-input" placeholder="值得感恩或做得不錯的事 2..." autocomplete="off">
+                                    </div>
+                                    <div class="input-with-icon">
+                                        <span class="input-icon">✨</span>
+                                        <input type="text" id="journal-3" class="form-input" placeholder="值得感恩或做得不錯的事 3..." autocomplete="off">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 4. 今日自我評分與反思 -->
+                            <div class="form-group-block">
+                                <label class="form-block-label">
+                                    <span class="label-badge">⭐</span>
+                                    <span>今日自我評分與反思</span>
+                                </label>
+
+                                <div class="rating-selector-box">
+                                    <span class="rating-label">整體滿意度：</span>
+                                    <div class="rating-stars" id="rating-stars-container">
+                                        <!-- JS 動態生成 1~10 分按鈕 -->
+                                    </div>
+                                    <span class="rating-value-display"><strong id="rating-number">--</strong> / 10 分</span>
+                                    <input type="hidden" id="daily-score" value="0">
+                                </div>
+
+                                <div class="reflection-fields">
+                                    <div class="field-col">
+                                        <label for="best-thing" class="field-label">今日做得最好的一件事：</label>
+                                        <input type="text" id="best-thing" class="form-input" placeholder="今天最肯定自己的行動..." autocomplete="off">
+                                    </div>
+                                    <div class="field-col">
+                                        <label for="improve-thing" class="field-label">明天可以改善的一件事：</label>
+                                        <input type="text" id="improve-thing" class="form-input" placeholder="明天要微調或避免的小習慣..." autocomplete="off">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 底部儲存與同步控制區 -->
+                            <div class="form-actions-bar">
+                                <div class="sync-actions-left">
+                                    <button type="button" class="btn-secondary" id="copy-summary-btn" title="複製今日完成項目與記錄文字">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                                        一鍵複製摘要文字
+                                    </button>
+                                </div>
+                                <div class="sync-actions-right">
+                                    <button type="button" class="btn-save-local" id="save-local-btn">
+                                        <span>💾</span> 儲存到本機
+                                    </button>
+                                    <button type="button" class="btn-primary-sync" id="sync-google-btn">
+                                        <span class="cloud-icon">☁️</span>
+                                        <strong>儲存並同步至 Google 表單</strong>
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </section>
+                </div>
+            </div>
+        </main>
+
+        <!-- ======================= 每週回顧視圖 (WEEKLY VIEW) ======================= -->
+        <section id="weekly-view" class="view-content">
+            <div class="weekly-container glass-panel">
+                <div class="weekly-hero-header">
+                    <div class="hero-left">
+                        <span class="hero-badge">🔄 每週回顧檢討</span>
+                        <h2 class="hero-title">七、每週回顧 ｜ Weekly Executive Review</h2>
+                        <p class="hero-desc">每週檢視長期趨勢，滾動調整生活節奏。不必每天滿分，持續改善更可貴。</p>
+                    </div>
+                    <div class="hero-actions">
+                        <button type="button" class="btn-secondary" id="copy-weekly-btn">複製每週回顧報告</button>
+                        <button type="button" class="btn-primary-sync" id="sync-weekly-google-btn">同步回顧到 Google 表單</button>
+                    </div>
+                </div>
+
+                <form id="weekly-review-form" class="weekly-form-body">
+                    <!-- 週檢視四大板塊 Checkboxes -->
+                    <div class="weekly-quad-grid">
+                        <!-- 專業與職涯 -->
+                        <div class="weekly-card">
+                            <div class="weekly-card-head">
+                                <span class="quad-emoji">💻</span>
+                                <h4>專業與職涯</h4>
+                            </div>
+                            <div class="weekly-card-checks">
+                                <label class="check-item-row" for="wk-ai-5days">
+                                    <input type="checkbox" id="wk-ai-5days" class="custom-checkbox wk-check" data-cat="wk-tech" data-label="AI 學習至少 5 天">
+                                    <span class="checkmark"></span>
+                                    <span class="item-text">AI 學習至少 5 天</span>
+                                </label>
+                                <label class="check-item-row" for="wk-tech-verified">
+                                    <input type="checkbox" id="wk-tech-verified" class="custom-checkbox wk-check" data-cat="wk-tech" data-label="完成一項可驗證的技術成果">
+                                    <span class="checkmark"></span>
+                                    <span class="item-text">完成一項可驗證的技術成果</span>
+                                </label>
+                                <label class="check-item-row" for="wk-ai103-prog">
+                                    <input type="checkbox" id="wk-ai103-prog" class="custom-checkbox wk-check" data-cat="wk-tech" data-label="檢視 AI-103 準備進度">
+                                    <span class="checkmark"></span>
+                                    <span class="item-text">檢視 AI-103 準備進度</span>
+                                </label>
+                                <label class="check-item-row" for="wk-notes-update">
+                                    <input type="checkbox" id="wk-notes-update" class="custom-checkbox wk-check" data-cat="wk-tech" data-label="更新技術筆記或實作專案">
+                                    <span class="checkmark"></span>
+                                    <span class="item-text">更新技術筆記或實作專案</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- 健康與體能 -->
+                        <div class="weekly-card">
+                            <div class="weekly-card-head">
+                                <span class="quad-emoji">🏃</span>
+                                <h4>健康與體能</h4>
+                            </div>
+                            <div class="weekly-card-checks">
+                                <label class="check-item-row" for="wk-run-volume">
+                                    <input type="checkbox" id="wk-run-volume" class="custom-checkbox wk-check" data-cat="wk-health" data-label="檢視每週跑量、訓練品質與恢復狀況">
+                                    <span class="checkmark"></span>
+                                    <span class="item-text">檢視每週跑量、訓練品質與恢復狀況</span>
+                                </label>
+                                <label class="check-item-row" for="wk-diet-sleep">
+                                    <input type="checkbox" id="wk-diet-sleep" class="custom-checkbox wk-check" data-cat="wk-health" data-label="檢視睡眠、飲食與蛋白質攝取">
+                                    <span class="checkmark"></span>
+                                    <span class="item-text">檢視睡眠、飲食與蛋白質攝取</span>
+                                </label>
+                                <label class="check-item-row" for="wk-strength-rest">
+                                    <input type="checkbox" id="wk-strength-rest" class="custom-checkbox wk-check" data-cat="wk-health" data-label="完成適當的肌力訓練或恢復安排">
+                                    <span class="checkmark"></span>
+                                    <span class="item-text">完成適當的肌力訓練或恢復安排</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- 個人成長 -->
+                        <div class="weekly-card">
+                            <div class="weekly-card-head">
+                                <span class="quad-emoji">📚</span>
+                                <h4>個人成長</h4>
+                            </div>
+                            <div class="weekly-card-checks">
+                                <label class="check-item-row" for="wk-grow-en">
+                                    <input type="checkbox" id="wk-grow-en" class="custom-checkbox wk-check" data-cat="wk-growth" data-label="持續英文學習">
+                                    <span class="checkmark"></span>
+                                    <span class="item-text">持續英文學習</span>
+                                </label>
+                                <label class="check-item-row" for="wk-grow-read">
+                                    <input type="checkbox" id="wk-grow-read" class="custom-checkbox wk-check" data-cat="wk-growth" data-label="持續閱讀">
+                                    <span class="checkmark"></span>
+                                    <span class="item-text">持續閱讀</span>
+                                </label>
+                                <label class="check-item-row" for="wk-grow-piano">
+                                    <input type="checkbox" id="wk-grow-piano" class="custom-checkbox wk-check" data-cat="wk-growth" data-label="持續鋼琴練習">
+                                    <span class="checkmark"></span>
+                                    <span class="item-text">持續鋼琴練習</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- 人際與生活 -->
+                        <div class="weekly-card">
+                            <div class="weekly-card-head">
+                                <span class="quad-emoji">❤️</span>
+                                <h4>人際與生活</h4>
+                            </div>
+                            <div class="weekly-card-checks">
+                                <label class="check-item-row" for="wk-life-social">
+                                    <input type="checkbox" id="wk-life-social" class="custom-checkbox wk-check" data-cat="wk-life" data-label="安排至少一次有意義的社交或交友行動">
+                                    <span class="checkmark"></span>
+                                    <span class="item-text">安排至少一次有意義的社交或交友行動</span>
+                                </label>
+                                <label class="check-item-row" for="wk-life-family">
+                                    <input type="checkbox" id="wk-life-family" class="custom-checkbox wk-check" data-cat="wk-life" data-label="安排休閒、信仰或與家人相處的時間">
+                                    <span class="checkmark"></span>
+                                    <span class="item-text">安排休閒、信仰或與家人相處的時間</span>
+                                </label>
+                                <label class="check-item-row" for="wk-life-mood">
+                                    <input type="checkbox" id="wk-life-mood" class="custom-checkbox wk-check" data-cat="wk-life" data-label="回顧本週的情緒、壓力與生活滿意度">
+                                    <span class="checkmark"></span>
+                                    <span class="item-text">回顧本週的情緒、壓力與生活滿意度</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 下週三大目標與深入覆盤 -->
+                    <div class="weekly-reflection-grid">
+                        <div class="weekly-goals-card">
+                            <h4 class="card-subheading">🎯 下週最重要的三個目標</h4>
+                            <div class="top3-inputs">
+                                <div class="input-with-num">
+                                    <span class="num-badge">1</span>
+                                    <input type="text" id="wk-goal-1" class="form-input" placeholder="下週第 1 個核心重點（體能／AI 關鍵產出）">
+                                </div>
+                                <div class="input-with-num">
+                                    <span class="num-badge">2</span>
+                                    <input type="text" id="wk-goal-2" class="form-input" placeholder="下週第 2 個核心重點">
+                                </div>
+                                <div class="input-with-num">
+                                    <span class="num-badge">3</span>
+                                    <input type="text" id="wk-goal-3" class="form-input" placeholder="下週第 3 個核心重點">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="weekly-summary-card">
+                            <h4 class="card-subheading">📝 本週深層總結覆盤</h4>
+                            <div class="review-fields-grid">
+                                <div class="field-col">
+                                    <label for="wk-summary" class="field-label">本週總結：</label>
+                                    <textarea id="wk-summary" class="form-textarea" rows="2" placeholder="本週整體生活節奏與執行心得..."></textarea>
+                                </div>
+                                <div class="field-col">
+                                    <label for="wk-proud" class="field-label">本週最有成就感的事：</label>
+                                    <textarea id="wk-proud" class="form-textarea" rows="2" placeholder="例如突破了某個跑步配速、搞懂了 RAG 向量搜尋..."></textarea>
+                                </div>
+                                <div class="field-col">
+                                    <label for="wk-challenge" class="field-label">本週最大的挑戰：</label>
+                                    <textarea id="wk-challenge" class="form-textarea" rows="2" placeholder="睡眠不足、時間被分散..."></textarea>
+                                </div>
+                                <div class="field-col">
+                                    <label for="wk-adjust" class="field-label">下週要調整的地方：</label>
+                                    <textarea id="wk-adjust" class="form-textarea" rows="2" placeholder="下週要採取的具體改善方案..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
             </div>
         </section>
+
+        <!-- 頁尾 -->
+        <footer class="app-footer">
+            <p>🌟 <strong>執行原則：</strong>持續比完美重要 ｜ 成果比時數重要 ｜ 健康優先 ｜ 平衡比堆積任務重要 ｜ 每週調整，不必每天滿分</p>
+        </footer>
     </div>
+
+    <!-- ======================= 執行原則浮動彈窗 (PRINCIPLES MODAL) ======================= -->
+    <div class="modal-overlay" id="principles-modal" aria-hidden="true">
+        <div class="modal-dialog glass-panel">
+            <div class="modal-header">
+                <div class="modal-title-wrap">
+                    <span class="modal-icon">🌟</span>
+                    <h3>五大核心執行原則</h3>
+                </div>
+                <button type="button" class="btn-close-modal" id="close-principles-btn" aria-label="關閉">✕</button>
+            </div>
+            <div class="modal-body principles-list">
+                <div class="principle-item">
+                    <div class="p-num">01</div>
+                    <div class="p-content">
+                        <h4>持續比完美重要</h4>
+                        <p>忙碌或疲憊時，只要完成最低標準即可（如：跑步改為散步恢復、AI 學習 10 分鐘）。不中斷習慣鏈條是長期勝出的唯一秘訣。</p>
+                    </div>
+                </div>
+                <div class="principle-item">
+                    <div class="p-num">02</div>
+                    <div class="p-content">
+                        <h4>成果比時數重要</h4>
+                        <p>AI 學習不只看影片或刷文章，要留下筆記、可運行的程式碼範例或實作成果，建立真正可對外展示的競爭力。</p>
+                    </div>
+                </div>
+                <div class="principle-item">
+                    <div class="p-num">03</div>
+                    <div class="p-content">
+                        <h4>健康優先</h4>
+                        <p>絕不為了完成清單或熬夜學習而犧牲 7 小時睡眠與跑步恢復。充沛體能是所有專業與心靈的大後盾。</p>
+                    </div>
+                </div>
+                <div class="principle-item">
+                    <div class="p-num">04</div>
+                    <div class="p-content">
+                        <h4>平衡比堆積任務重要</h4>
+                        <p>不只追求職涯與體能，也要照顧信仰、鋼琴興趣、家人與人際關係，維持身心靈健全的平衡計分卡。</p>
+                    </div>
+                </div>
+                <div class="principle-item">
+                    <div class="p-num">05</div>
+                    <div class="p-content">
+                        <h4>每週調整，不必每天滿分</h4>
+                        <p>檢視長期趨勢，以每週回顧為抓手，逐步且溫和地改善自己的生活節奏。</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-primary" id="confirm-principles-btn">銘記於心，開始實踐</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ======================= GOOGLE 表單同步設定彈窗 (SETTINGS MODAL) ======================= -->
+    <div class="modal-overlay" id="settings-modal" aria-hidden="true">
+        <div class="modal-dialog glass-panel modal-lg">
+            <div class="modal-header">
+                <div class="modal-title-wrap">
+                    <span class="modal-icon">☁️</span>
+                    <div>
+                        <h3>Google 表單 & 試算表同步設定</h3>
+                        <p class="modal-sub">自動將每日日期與完成項目記錄至 Google Form / Sheets</p>
+                    </div>
+                </div>
+                <button type="button" class="btn-close-modal" id="close-settings-btn" aria-label="關閉">✕</button>
+            </div>
+            <div class="modal-body settings-body">
+                <!-- 方案切換 -->
+                <div class="setting-mode-tabs">
+                    <button type="button" class="mode-tab active" data-mode="gform">方案 A：Google 表單（最簡單）</button>
+                    <button type="button" class="mode-tab" data-mode="gas">方案 B：Google Apps Script 試算表（進階 API）</button>
+                </div>
+
+                <!-- 方案 A 表單 -->
+                <div class="mode-section active" id="mode-gform-section">
+                    <div class="setup-tutorial-box">
+                        <span class="tut-tag">3 步驟超速設定</span>
+                        <ol>
+                            <li>建立一個 Google 表單（例如題目含：<strong>「日期」</strong>、<strong>「完成項目」</strong>、<strong>「今日學習與反思」</strong>、<strong>「整體評分」</strong>）。</li>
+                            <li>點擊表單右上角「⋮」選擇<strong>「取得預先填入的連結」</strong>，隨便填入字樣後按「取得連結」並複製。</li>
+                            <li>將連結貼在下方<strong>「自動解析輸入框」</strong>，系統會自動抓取表單網址與 entry 代號！</li>
+                        </ol>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="gform-prefill-url"><strong>✨ 一鍵貼上預先填入連結（自動解析）：</strong></label>
+                        <input type="url" id="gform-prefill-url" class="form-input" placeholder="貼上 https://docs.google.com/forms/d/e/.../viewform?entry.12345=...">
+                        <button type="button" class="btn-sm btn-secondary mt-1" id="btn-parse-prefill">⚡ 自動解析填入以下欄位</button>
+                    </div>
+
+                    <div class="form-group-grid">
+                        <div class="form-group">
+                            <label for="gform-action-url">Google 表單提交網址 (formResponse URL)：</label>
+                            <input type="url" id="gform-action-url" class="form-input" placeholder="https://docs.google.com/forms/d/e/【表單ID】/formResponse">
+                        </div>
+                        <div class="form-group">
+                            <label for="gform-entry-date">「日期」的 Entry ID：</label>
+                            <input type="text" id="gform-entry-date" class="form-input" placeholder="例如 entry.1045781291">
+                        </div>
+                        <div class="form-group">
+                            <label for="gform-entry-items">「完成項目」的 Entry ID：</label>
+                            <input type="text" id="gform-entry-items" class="form-input" placeholder="例如 entry.2001949384（儲存日期與打勾項目清單）">
+                        </div>
+                        <div class="form-group">
+                            <label for="gform-entry-notes">「學習與反思/成果」Entry ID（選填）：</label>
+                            <input type="text" id="gform-entry-notes" class="form-input" placeholder="例如 entry.1167823940">
+                        </div>
+                        <div class="form-group">
+                            <label for="gform-entry-score">「自我評分」Entry ID（選填）：</label>
+                            <input type="text" id="gform-entry-score" class="form-input" placeholder="例如 entry.83294820">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 方案 B 表單 (Google Apps Script) -->
+                <div class="mode-section" id="mode-gas-section">
+                    <div class="setup-tutorial-box">
+                        <span class="tut-tag">Google 試算表 Web App 設定</span>
+                        <p>只要在你的 Google 試算表「擴充功能」>「Apps Script」貼上下方預備好的程式碼，發布為「網頁應用程式」，並將網址貼在下方，即可完美寫入 Google Sheet 每一列！</p>
+                    </div>
+                    <div class="form-group">
+                        <label for="gas-endpoint-url">Google Apps Script Web App URL：</label>
+                        <input type="url" id="gas-endpoint-url" class="form-input" placeholder="https://script.google.com/macros/s/AKfycb.../exec">
+                    </div>
+                    <div class="gas-code-preview">
+                        <div class="code-header">
+                            <span>Apps Script 範例程式碼（點擊複製）</span>
+                            <button type="button" class="btn-sm btn-ghost" id="copy-gas-code-btn">複製程式碼</button>
+                        </div>
+                        <pre><code id="gas-code-block">function doPost(e) {
+  try {
+    var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+    var data = JSON.parse(e.postData.contents);
+    sheet.appendRow([
+      data.date,          // 日期 (例如: 10/25日)
+      data.items,         // 完成項目清單
+      data.score,         // 整體評分
+      data.ai_log,        // AI 學習成果
+      data.top3,          // 今日三件要事
+      data.gratitude,     // 感恩日記
+      data.best_thing,    // 最好的一件事
+      data.improve_thing, // 改善的一件事
+      new Date()          // 提交時間戳記
+    ]);
+    return ContentService.createTextOutput(JSON.stringify({result: "success"}))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch(err) {
+    return ContentService.createTextOutput(JSON.stringify({result: "error", error: err}))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}</code></pre>
+                    </div>
+                </div>
+
+                <!-- 預覽輸出格式 -->
+                <div class="preview-box">
+                    <div class="preview-header">
+                        <strong>📊 傳送至 Google 表單的「完成項目」格式預覽：</strong>
+                    </div>
+                    <div class="preview-content" id="output-format-preview">
+                        10/25日 完成項目: 跑步訓練／休息日恢復, 深綠色蔬菜 2 份以上, 睡眠 7 小時以上, AI 技術學習 30 分鐘, 英文學習 30 分鐘, 鋼琴練習 20 分鐘, 靜心／禱告 10 分鐘
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" id="test-gform-connection-btn">🧪 測試連線傳送</button>
+                <button type="button" class="btn-primary" id="save-settings-btn">儲存設定</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 浮動提示 Toast -->
+    <div id="toast" class="toast"></div>
 
     <script src="app.js"></script>
 </body>

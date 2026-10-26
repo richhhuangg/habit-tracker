@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: habit-tracker
+    runtime: static
+    branch: main
+    buildCommand: ""
+    staticPublishPath: ./
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    headers:
+      - path: /*
+        name: Cache-Control
+        value: public, max-age=0, must-revalidate
