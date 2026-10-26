@@ -1148,7 +1148,7 @@ function calculateDayStats(dateStr) {
     const isRun = !!checks['chk-run'];
     const isSleep = !!checks['chk-sleep'];
     const isSteps = !!checks['chk-steps'];
-    const isDiet = !!checks['chk-diet-veg'] || !!checks['chk-diet-protein'] || !!checks['chk-diet-nosugar'] || !!checks['chk-diet-lessfried'];
+    const isDiet = !!checks['chk-diet-veg'] || !!checks['chk-diet-protein'] || !!checks['chk-diet-nosugar'] || !!checks['chk-diet-lessfried'] || !!checks['chk-diet-superfoods'];
     const healthCount = (isRun ? 1 : 0) + (isSleep ? 1 : 0) + (isSteps ? 1 : 0) + (isDiet ? 1 : 0);
 
     // AI & 科技 (4項)
